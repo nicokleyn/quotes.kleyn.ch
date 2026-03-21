@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joy Impact Legacy — Chessboard Quotes</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a1a1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: Georgia, 'Times New Roman', serif;
+    overflow: hidden;
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    width: min(90vw, 90vh, 640px);
+    height: min(90vw, 90vh, 640px);
+    border: 3px solid #444;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  }
+
+  .square {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: clamp(10px, 2vw, 16px);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: lowercase;
+    padding: 2px;
+    text-align: center;
+    word-break: break-word;
+    overflow: hidden;
+    transition: opacity 0.8s ease-in-out;
+  }
+
+  .square.light {
+    background: #e8e8e8;
+    color: #2a2a2a;
+  }
+
+  .square.dark {
+    background: #888;
+    color: #f5f5f5;
+  }
+
+  .square.has-word {
+    font-style: italic;
+  }
+
+  .square.fade-out {
+    opacity: 0;
+  }
+
+  .attribution {
+    color: #777;
+    font-size: 13px;
+    font-style: italic;
+    letter-spacing: 0.05em;
+    text-align: center;
+    min-height: 20px;
+    transition: opacity 0.8s ease-in-out;
+  }
+
+  .attribution.fade-out {
+    opacity: 0;
+  }
+
+  .timer-bar {
+    width: min(90vw, 90vh, 640px);
+    height: 3px;
+    background: #333;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .timer-fill {
+    height: 100%;
+    background: #999;
+    width: 0%;
+    transition: width 0.25s linear;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="board" id="board"></div>
+  <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+  <div class="attribution" id="attribution"></div>
+</div>
+
+<script>
+const quotes = [
+  // --- Original quotes from Joy Impact Legacy ---
+  { text: "Those who have the privilege to know have the duty to act", author: "Albert Einstein" },
+  { text: "Elegance is not about being noticed it is about being remembered", author: "Giorgio Armani" },
+  { text: "The two most important days of your life are the day you were born and the day you find out why", author: "Mark Twain" },
+  { text: "Don't let the noise of others' opinions drown out your own inner voice", author: "Steve Jobs" },
+  { text: "There are some things you learn best in calm and some in storm", author: "Willa Cather" },
+  { text: "Gratitude is not only the greatest of virtues but the parent of all others", author: "Cicero" },
+  { text: "How people treat you is their karma how you react is yours", author: "Wayne Dyer" },
+  { text: "A goal without a plan is just a wish", author: "Antoine de Saint-Exupéry" },
+  { text: "If you want something you never had you have to do something you've never done", author: "" },
+  { text: "What you think you become what you feel you attract what you imagine you create", author: "Buddha" },
+  { text: "I am thankful to all those who said no it is because of them I did it myself", author: "Albert Einstein" },
+  { text: "The test of a first rate intelligence is the ability to hold two opposing ideas in mind", author: "F. Scott Fitzgerald" },
+  { text: "If liberty means anything at all it means the right to tell people what they do not want to hear", author: "George Orwell" },
+  { text: "Kill them with success and bury them with a smile", author: "" },
+  { text: "Expect nothing and appreciate everything", author: "" },
+  { text: "Be hungry be humble be the hardest worker in the room", author: "" },
+  { text: "Never be too proud to change", author: "" },
+  { text: "When people laugh they can change their minds", author: "The Dalai Lama" },
+  { text: "Privilege is invisible to those who have it", author: "" },
+  { text: "Do something today that your future self will thank you for", author: "" },
+  { text: "Dream plan do", author: "" },
+  { text: "Don't dream your life live your dream", author: "" },
+  { text: "Smile at strangers slow down say thank you laugh and give compliments today", author: "" },
+  { text: "Make your own magic", author: "" },
+  { text: "If I had asked people what they wanted they would have said faster horses", author: "Henry Ford" },
+  { text: "Worrying about how things might go wrong doesn't help things to go right", author: "" },
+  { text: "If everybody likes you you are pretty dull", author: "Bette Davis" },
+  { text: "In a world of unlimited voices and choices those who can bring people together and tell a good story have power", author: "Shonda Rhimes" },
+  { text: "Don't worry about what you can't control our focus and energy needs to be on the things we can control", author: "Tim Tebow" },
+  { text: "The brave men don't live forever but the cautious do not live at all", author: "Richard Branson" },
+  // --- New complementary quotes ---
+  { text: "We make a living by what we get but we make a life by what we give", author: "Winston Churchill" },
+  { text: "The best time to plant a tree was twenty years ago the second best time is now", author: "Chinese Proverb" },
+  { text: "No one has ever become poor by giving", author: "Anne Frank" },
+  { text: "The obstacle is the way", author: "Marcus Aurelius" },
+  { text: "Fall seven times stand up eight", author: "Japanese Proverb" },
+  { text: "It is not the strongest of the species that survives nor the most intelligent but the one most responsive to change", author: "Charles Darwin" },
+  { text: "Simplicity is the ultimate sophistication", author: "Leonardo da Vinci" },
+  { text: "The main thing is to keep the main thing the main thing", author: "Stephen Covey" },
+  { text: "Less but better", author: "Dieter Rams" },
+  { text: "Be the change you wish to see in the world", author: "Gandhi" },
+  { text: "Everyone you meet is fighting a battle you know nothing about be kind always", author: "Robin Williams" },
+  { text: "We are what we repeatedly do excellence then is not an act but a habit", author: "Aristotle" },
+  { text: "Joy does not simply happen to us we have to choose joy and keep choosing it every day", author: "Henri Nouwen" },
+  { text: "The purpose of life is not to be happy it is to be useful to be honourable to be compassionate", author: "Ralph Waldo Emerson" },
+];
+
+const TOTAL_SQUARES = 64;
+const CYCLE_MS = 30000;
+let currentIndex = 0;
+let timerStart = 0;
+let animFrameId = null;
+
+// Build board
+const board = document.getElementById("board");
+for (let i = 0; i < TOTAL_SQUARES; i++) {
+  const row = Math.floor(i / 8);
+  const col = i % 8;
+  const isLight = (row + col) % 2 === 0;
+  const sq = document.createElement("div");
+  sq.className = `square ${isLight ? "light" : "dark"}`;
+  sq.id = `sq-${i}`;
+  board.appendChild(sq);
+}
+
+function displayQuote(index) {
+  const quote = quotes[index];
+  const words = quote.text.split(/\s+/);
+  const attribution = document.getElementById("attribution");
+  const n = words.length;
+
+  // Spread words evenly across all 64 squares, maintaining left-to-right, top-to-bottom order
+  // Calculate which squares get words using even distribution
+  const wordSquares = new Set();
+  if (n >= TOTAL_SQUARES) {
+    // More words than squares — fill every square
+    for (let i = 0; i < TOTAL_SQUARES; i++) wordSquares.add(i);
+  } else {
+    // Distribute evenly across the board
+    for (let w = 0; w < n; w++) {
+      const pos = Math.round(w * (TOTAL_SQUARES - 1) / (n - 1 || 1));
+      wordSquares.add(pos);
+    }
+    // Resolve any collisions by nudging to nearest free square
+    const sorted = [...wordSquares].sort((a, b) => a - b);
+    if (sorted.length < n) {
+      const all = new Set(sorted);
+      for (let w = 0; w < n && all.size < n; w++) {
+        const ideal = Math.round(w * (TOTAL_SQUARES - 1) / (n - 1 || 1));
+        let offset = 1;
+        while (all.has(ideal)) {
+          if (ideal + offset < TOTAL_SQUARES && !all.has(ideal + offset)) { all.add(ideal + offset); break; }
+          if (ideal - offset >= 0 && !all.has(ideal - offset)) { all.add(ideal - offset); break; }
+          offset++;
+        }
+      }
+      wordSquares.clear();
+      all.forEach(v => wordSquares.add(v));
+    }
+  }
+
+  // Map sorted positions to words in order
+  const positions = [...wordSquares].sort((a, b) => a - b);
+  const squareToWord = new Map();
+  for (let w = 0; w < Math.min(n, positions.length); w++) {
+    squareToWord.set(positions[w], words[w]);
+  }
+
+  for (let i = 0; i < TOTAL_SQUARES; i++) {
+    const sq = document.getElementById(`sq-${i}`);
+    if (squareToWord.has(i)) {
+      sq.textContent = squareToWord.get(i);
+      sq.classList.add("has-word");
+    } else {
+      sq.textContent = "";
+      sq.classList.remove("has-word");
+    }
+    sq.classList.remove("fade-out");
+  }
+
+  attribution.textContent = quote.author ? `— ${quote.author}` : "";
+  attribution.classList.remove("fade-out");
+}
+
+function fadeOut(callback) {
+  const squares = document.querySelectorAll(".square");
+  const attribution = document.getElementById("attribution");
+  squares.forEach(sq => sq.classList.add("fade-out"));
+  attribution.classList.add("fade-out");
+  setTimeout(callback, 850);
+}
+
+function nextQuote() {
+  fadeOut(() => {
+    currentIndex = (currentIndex + 1) % quotes.length;
+    displayQuote(currentIndex);
+    timerStart = performance.now();
+  });
+}
+
+// Timer bar animation
+function updateTimer(now) {
+  const elapsed = now - timerStart;
+  const pct = Math.min((elapsed / CYCLE_MS) * 100, 100);
+  document.getElementById("timerFill").style.width = pct + "%";
+
+  if (elapsed >= CYCLE_MS) {
+    nextQuote();
+  }
+  animFrameId = requestAnimationFrame(updateTimer);
+}
+
+// Shuffle on load for variety
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+shuffle(quotes);
+
+// Start
+displayQuote(currentIndex);
+timerStart = performance.now();
+animFrameId = requestAnimationFrame(updateTimer);
+</script>
+</body>
+</html>
