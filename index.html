@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Joy Impact Legacy — Chessboard Quotes</title>
+<title>Iconic Women — Living Chessboard</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   body {
-    background: #1a1a1a;
+    background: #0a0a0a;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -16,263 +15,672 @@
     font-family: Georgia, 'Times New Roman', serif;
     overflow: hidden;
   }
-
   .container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 24px;
+    gap: 14px;
   }
-
-  .board {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(8, 1fr);
+  .era-label {
+    color: #666;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    min-height: 18px;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .era-label.visible { opacity: 1; }
+  canvas#main {
     width: min(90vw, 90vh, 640px);
     height: min(90vw, 90vh, 640px);
-    border: 3px solid #444;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    border: 2px solid #222;
+    box-shadow: 0 8px 60px rgba(0,0,0,0.6);
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
   }
-
-  .square {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: clamp(10px, 2vw, 16px);
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    text-transform: lowercase;
-    padding: 2px;
-    text-align: center;
-    word-break: break-word;
-    overflow: hidden;
-    transition: opacity 0.8s ease-in-out;
-  }
-
-  .square.light {
-    background: #e8e8e8;
-    color: #2a2a2a;
-  }
-
-  .square.dark {
-    background: #888;
-    color: #f5f5f5;
-  }
-
-  .square.has-word {
-    font-style: italic;
-  }
-
-  .square.fade-out {
-    opacity: 0;
-  }
-
-  .attribution {
-    color: #777;
-    font-size: 13px;
-    font-style: italic;
-    letter-spacing: 0.05em;
-    text-align: center;
-    min-height: 20px;
-    transition: opacity 0.8s ease-in-out;
-  }
-
-  .attribution.fade-out {
-    opacity: 0;
-  }
-
   .timer-bar {
     width: min(90vw, 90vh, 640px);
-    height: 3px;
-    background: #333;
+    height: 2px;
+    background: #1a1a1a;
     border-radius: 2px;
     overflow: hidden;
   }
-
   .timer-fill {
     height: 100%;
-    background: #999;
     width: 0%;
-    transition: width 0.25s linear;
+    background: linear-gradient(90deg, #c8b89a, #d4a56a);
+    transition: width 0.15s linear;
   }
+  .name-label {
+    color: #888;
+    font-size: 13px;
+    font-style: italic;
+    letter-spacing: 0.06em;
+    min-height: 20px;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  .name-label.visible { opacity: 1; }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <div class="board" id="board"></div>
+  <div class="era-label" id="eraLabel"></div>
+  <canvas id="main" width="800" height="800"></canvas>
   <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
-  <div class="attribution" id="attribution"></div>
+  <div class="name-label" id="nameLabel"></div>
 </div>
 
 <script>
-const quotes = [
-  // --- Original quotes from Joy Impact Legacy ---
-  { text: "Those who have the privilege to know have the duty to act", author: "Albert Einstein" },
-  { text: "Elegance is not about being noticed it is about being remembered", author: "Giorgio Armani" },
-  { text: "The two most important days of your life are the day you were born and the day you find out why", author: "Mark Twain" },
-  { text: "Don't let the noise of others' opinions drown out your own inner voice", author: "Steve Jobs" },
-  { text: "There are some things you learn best in calm and some in storm", author: "Willa Cather" },
-  { text: "Gratitude is not only the greatest of virtues but the parent of all others", author: "Cicero" },
-  { text: "How people treat you is their karma how you react is yours", author: "Wayne Dyer" },
-  { text: "A goal without a plan is just a wish", author: "Antoine de Saint-Exupéry" },
-  { text: "If you want something you never had you have to do something you've never done", author: "" },
-  { text: "What you think you become what you feel you attract what you imagine you create", author: "Buddha" },
-  { text: "I am thankful to all those who said no it is because of them I did it myself", author: "Albert Einstein" },
-  { text: "The test of a first rate intelligence is the ability to hold two opposing ideas in mind", author: "F. Scott Fitzgerald" },
-  { text: "If liberty means anything at all it means the right to tell people what they do not want to hear", author: "George Orwell" },
-  { text: "Kill them with success and bury them with a smile", author: "" },
-  { text: "Expect nothing and appreciate everything", author: "" },
-  { text: "Be hungry be humble be the hardest worker in the room", author: "" },
-  { text: "Never be too proud to change", author: "" },
-  { text: "When people laugh they can change their minds", author: "The Dalai Lama" },
-  { text: "Privilege is invisible to those who have it", author: "" },
-  { text: "Do something today that your future self will thank you for", author: "" },
-  { text: "Dream plan do", author: "" },
-  { text: "Don't dream your life live your dream", author: "" },
-  { text: "Smile at strangers slow down say thank you laugh and give compliments today", author: "" },
-  { text: "Make your own magic", author: "" },
-  { text: "If I had asked people what they wanted they would have said faster horses", author: "Henry Ford" },
-  { text: "Worrying about how things might go wrong doesn't help things to go right", author: "" },
-  { text: "If everybody likes you you are pretty dull", author: "Bette Davis" },
-  { text: "In a world of unlimited voices and choices those who can bring people together and tell a good story have power", author: "Shonda Rhimes" },
-  { text: "Don't worry about what you can't control our focus and energy needs to be on the things we can control", author: "Tim Tebow" },
-  { text: "The brave men don't live forever but the cautious do not live at all", author: "Richard Branson" },
-  // --- New complementary quotes ---
-  { text: "We make a living by what we get but we make a life by what we give", author: "Winston Churchill" },
-  { text: "The best time to plant a tree was twenty years ago the second best time is now", author: "Chinese Proverb" },
-  { text: "No one has ever become poor by giving", author: "Anne Frank" },
-  { text: "The obstacle is the way", author: "Marcus Aurelius" },
-  { text: "Fall seven times stand up eight", author: "Japanese Proverb" },
-  { text: "It is not the strongest of the species that survives nor the most intelligent but the one most responsive to change", author: "Charles Darwin" },
-  { text: "Simplicity is the ultimate sophistication", author: "Leonardo da Vinci" },
-  { text: "The main thing is to keep the main thing the main thing", author: "Stephen Covey" },
-  { text: "Less but better", author: "Dieter Rams" },
-  { text: "Be the change you wish to see in the world", author: "Gandhi" },
-  { text: "Everyone you meet is fighting a battle you know nothing about be kind always", author: "Robin Williams" },
-  { text: "We are what we repeatedly do excellence then is not an act but a habit", author: "Aristotle" },
-  { text: "Joy does not simply happen to us we have to choose joy and keep choosing it every day", author: "Henri Nouwen" },
-  { text: "The purpose of life is not to be happy it is to be useful to be honourable to be compassionate", author: "Ralph Waldo Emerson" },
+// ═══════════════════════════════════════════════════
+// DATA — 99 Iconic Women with local portrait filenames
+// ═══════════════════════════════════════════════════
+// Images live in ./portraits/ folder
+// To swap in AI-generated portraits, just replace the files keeping the same names
+const women = [
+  // ── ROYALTY & IMPERIAL POWER (23) ──
+  { name: "Virgin Mary", era: "Faith · c. 18 BC – c. 33 AD", img: "portraits/virgin-mary.png",
+    quote: "My soul magnifies the Lord and my spirit rejoices in God my Saviour", palette: ["#1a2a5c","#3a4a8a","#8a9ac8","#c8d0e8","#f0e8d0"], seed: 1 },
+  { name: "Hatshepsut", era: "Pharaoh · c. 1507–1458 BC", img: "portraits/hatshepsut.jpg",
+    quote: "Now my heart turns this way and that as I think what the people will say who shall see my monuments", palette: ["#1a0f00","#3d2b1f","#b8860b","#daa520","#faebd7"], seed: 2 },
+  { name: "Nefertiti", era: "Royalty · c. 1370–1330 BC", img: "portraits/nefertiti.jpg",
+    quote: "Beauty and power united in a revolution of the sun", palette: ["#2a1a00","#5a3a10","#c8a040","#e8c868","#f8f0d8"], seed: 3 },
+  { name: "Cleopatra", era: "Royalty · 69–30 BC", img: "portraits/cleopatra.jpg",
+    quote: "I will not be triumphed over", palette: ["#1a0f00","#3d2b1f","#c9a227","#e8d44d","#fdf6e3"], seed: 4 },
+  { name: "Livia Drusilla", era: "Empire · 59 BC – 29 AD", img: "portraits/livia-drusilla.jpg",
+    quote: "The power behind the throne endures longest", palette: ["#2a2020","#5a4040","#8a6a6a","#b8a0a0","#e0d0d0"], seed: 5 },
+  { name: "Boudica", era: "Resistance · d. 60/61 AD", img: "portraits/boudica.jpg",
+    quote: "It is not as a woman descended from noble ancestry but as one of the people that I am avenging lost freedom", palette: ["#1a2a1a","#3a5a2a","#6a8a4a","#a0b878","#d0d8b0"], seed: 6 },
+  { name: "Théodora", era: "Empire · c. 500–548 AD", img: "portraits/theodora.jpg",
+    quote: "Royal purple is the noblest shroud", palette: ["#2a1040","#4a2068","#7a40a0","#a870c8","#d8b0e8"], seed: 7 },
+  { name: "Wu Zetian", era: "Emperor · 624–705 AD", img: "portraits/wu-zetian.png",
+    quote: "I am the only woman in the history of China to assume the title of Empress Regnant", palette: ["#2a0a0a","#5a1a1a","#a83030","#d06040","#f0c0a0"], seed: 8 },
+  { name: "Eleanor of Aquitaine", era: "Royalty · c. 1122–1204", img: "portraits/eleanor-of-aquitaine.jpg",
+    quote: "Courts and camps are the only places to learn the world in", palette: ["#1a1a30","#3a3a60","#6a6a90","#a0a0c0","#d0d0e0"], seed: 9 },
+  { name: "Isabelle of Castille", era: "Royalty · 1451–1504", img: "portraits/isabelle-of-castille.jpg",
+    quote: "I will assume the undertaking for my own crown of Castile", palette: ["#2a0a0a","#5a2020","#8a4040","#c08060","#e8c8a0"], seed: 10 },
+  { name: "Catherine de Medici", era: "Royalty · 1519–1589", img: "portraits/catherine-de-medici.jpg",
+    quote: "Patience is the companion of wisdom", palette: ["#1a1020","#3a2040","#6a4070","#9a70a0","#c8a8d0"], seed: 11 },
+  { name: "Queen Margot", era: "Royalty · 1553–1615", img: "portraits/queen-margot.jpg",
+    quote: "The memory of one who wrote her own story in an age that silenced women", palette: ["#2a1a20","#5a3a40","#8a5a68","#b88898","#e0b8c8"], seed: 12 },
+  { name: "Njinga of Ndongo", era: "Resistance · c. 1583–1663", img: "portraits/njinga.jpg",
+    quote: "I am the equal of any man and I will prove it with my kingdom", palette: ["#1a0e07","#3b2314","#6a4a2a","#a07848","#d0a878"], seed: 13 },
+  { name: "Elisabeth I", era: "Royalty · 1533–1603", img: "portraits/elisabeth-i.jpg",
+    quote: "I know I have the body of a weak and feeble woman but I have the heart and stomach of a king", palette: ["#2a0a0a","#5c1a1a","#8b2a2a","#c9a227","#fdf6e3"], seed: 14 },
+  { name: "Catherine the Great", era: "Empire · 1729–1796", img: "portraits/catherine-the-great.jpg",
+    quote: "I shall be an autocrat that is my trade and the good Lord will forgive me that is his", palette: ["#0d1b2a","#1b2a4a","#2a4a6a","#c9b037","#e8d44d"], seed: 15 },
+  { name: "Victoria", era: "Royalty · 1819–1901", img: "portraits/victoria.jpg",
+    quote: "We are not interested in the possibilities of defeat they do not exist", palette: ["#1a1a2a","#3a3a5a","#6a6a8a","#a0a0b8","#d8d8e8"], seed: 16 },
+  { name: "Empress Dowager Cixi", era: "Empire · 1835–1908", img: "portraits/empress-dowager-cixi.png",
+    quote: "Today I am ruling from behind the curtain tomorrow the curtain may fall", palette: ["#2a0a00","#5a2010","#a04020","#d08040","#f0c080"], seed: 17 },
+  { name: "Sarah Churchill", era: "Politics · 1660–1744", img: "portraits/sarah-churchill.jpg",
+    quote: "A queen's closest friend holds the kingdom's secrets", palette: ["#1a2020","#3a5050","#6a8888","#98b8b8","#c8e0e0"], seed: 18 },
+  { name: "Elisabeth II", era: "Royalty · 1926–2022", img: "portraits/elisabeth-ii.jpg",
+    quote: "I have to be seen to be believed", palette: ["#1a2a3a","#2a4a6a","#4a7a9a","#80b0c8","#b8d8e8"], seed: 19 },
+  { name: "Diana, Princess of Wales", era: "Humanitarian · 1961–1997", img: "portraits/diana-princess-of-wales.jpg",
+    quote: "Carry out a random act of kindness with no expectation of reward", palette: ["#f0e8e0","#c8b8a8","#7a9ab8","#4a7098","#2a4a68"], seed: 20 },
+  { name: "Queen Zenobia", era: "Resistance · c. 240–274 AD", img: "portraits/queen-zenobia.png",
+    quote: "I am a warrior queen and I challenged Rome itself", palette: ["#2a1a00","#5a3a10","#8a6a30","#c0a060","#e8d0a0"], seed: 21 },
+  { name: "Rani Lakshmibai", era: "Resistance · 1828–1858", img: "portraits/rani-lakshmibai.jpg",
+    quote: "I shall not surrender my Jhansi", palette: ["#2a1a10","#5a3a20","#8a5a30","#c08848","#e8c088"], seed: 22 },
+  { name: "Maria Theresa", era: "Empire · 1717–1780", img: "portraits/maria-theresa.jpg",
+    quote: "I am a mother to my country as I am to my children", palette: ["#1a1a30","#3a3a60","#7070a0","#a0a0c8","#d0d0e8"], seed: 23 },
+  // ── POLITICS & LEADERSHIP (9) ──
+  { name: "Eleanor Roosevelt", era: "Politics · 1884–1962", img: "portraits/eleanor-roosevelt.jpg",
+    quote: "No one can make you feel inferior without your consent", palette: ["#2d3436","#636e72","#b2bec3","#dfe6e9","#74b9ff"], seed: 24 },
+  { name: "Margaret Thatcher", era: "Politics · 1925–2013", img: "portraits/margaret-thatcher.jpg",
+    quote: "If you want something said ask a man if you want something done ask a woman", palette: ["#1a2030","#2a4060","#4a6898","#80a0c0","#b8d0e0"], seed: 25 },
+  { name: "Indira Gandhi", era: "Politics · 1917–1984", img: "portraits/indira-gandhi.png",
+    quote: "You cannot shake hands with a clenched fist", palette: ["#1a2a1a","#2d4a2d","#5a7a3a","#8aaa5a","#c8d8a8"], seed: 26 },
+  { name: "Katherine Graham", era: "Media · 1917–2001", img: "portraits/katherine-graham.jpg",
+    quote: "To love what you do and feel that it matters how could anything be more fun", palette: ["#2a2a2a","#5a5a5a","#888888","#b8b8b8","#e0e0e0"], seed: 27 },
+  { name: "Eva Perón", era: "Politics · 1919–1952", img: "portraits/eva-peron.jpg",
+    quote: "I will return and I will be millions", palette: ["#2a1a10","#5a3a20","#a06830","#d0a050","#f0d890"], seed: 28 },
+  { name: "Golda Meir", era: "Politics · 1898–1978", img: "portraits/golda-meir.jpg",
+    quote: "Whether women are better than men I cannot say but I can say they are certainly no worse", palette: ["#2a2018","#5a4838","#887060","#b8a088","#e0d0b8"], seed: 29 },
+  { name: "Benazir Bhutto", era: "Politics · 1953–2007", img: "portraits/benazir-bhutto.jpg",
+    quote: "Democracy is the best revenge", palette: ["#1a2a1a","#2a5a2a","#4a8a4a","#78b878","#b0e0b0"], seed: 30 },
+  { name: "Michelle Obama", era: "Politics · 1964–present", img: "portraits/michelle-obama.jpg",
+    quote: "When they go low we go high", palette: ["#1a1020","#3a2048","#6a3878","#9868a8","#c8a0d0"], seed: 31 },
+  { name: "Shirley Chisholm", era: "Politics · 1924–2005", img: "portraits/shirley-chisholm.jpg",
+    quote: "If they do not give you a seat at the table bring a folding chair", palette: ["#2a1a10","#5a3a28","#8a5a40","#b88868","#e0b898"], seed: 32 },
+  // ── LAW, JUSTICE & RIGHTS (2) ──
+  { name: "Ruth Bader Ginsburg", era: "Justice · 1933–2020", img: "portraits/ruth-bader-ginsburg.jpg",
+    quote: "Fight for the things you care about but do it in a way that will lead others to join you", palette: ["#1a1a2e","#2d2d50","#4a4a7a","#7878a8","#b8b8d8"], seed: 33 },
+  { name: "Sandra Day O'Connor", era: "Justice · 1930–2023", img: "portraits/sandra-day-oconnor.jpg",
+    quote: "The power I exert on the court depends on the power of my arguments not on my gender", palette: ["#2a2a30","#4a4a60","#7070a0","#a0a0c8","#d0d0e0"], seed: 34 },
+  // ── ACTIVISM & HUMAN RIGHTS (14) ──
+  { name: "Mary Wollstonecraft", era: "Rights · 1759–1797", img: "portraits/mary-wollstonecraft.jpg",
+    quote: "I do not wish women to have power over men but over themselves", palette: ["#2a1a10","#5a3a28","#8a6a48","#baa878","#e8d8b8"], seed: 35 },
+  { name: "Sojourner Truth", era: "Abolition · c. 1797–1883", img: "portraits/sojourner-truth.jpg",
+    quote: "Truth is powerful and it prevails", palette: ["#1a0e07","#3b2314","#5c3a28","#8b6f47","#c4a882"], seed: 36 },
+  { name: "Harriet Tubman", era: "Freedom · c. 1822–1913", img: "portraits/harriet-tubman.jpg",
+    quote: "Every great dream begins with a dreamer", palette: ["#1a0e07","#3b2314","#654321","#8b6f47","#c8ad7f"], seed: 37 },
+  { name: "Susan B. Anthony", era: "Suffrage · 1820–1906", img: "portraits/susan-b-anthony.jpg",
+    quote: "Failure is impossible", palette: ["#2a2a30","#4a4a58","#7a7a90","#a8a8c0","#d0d0e0"], seed: 38 },
+  { name: "Emmeline Pankhurst", era: "Suffrage · 1858–1928", img: "portraits/emmeline-pankhurst.jpg",
+    quote: "Deeds not words", palette: ["#2b1a40","#4a2c6e","#7b4fa2","#a87cc2","#d4b8e0"], seed: 39 },
+  { name: "Helen Keller", era: "Activism · 1880–1968", img: "portraits/helen-keller.jpg",
+    quote: "The only thing worse than being blind is having sight but no vision", palette: ["#2a2a20","#5a5a48","#888870","#b8b8a0","#e0e0d0"], seed: 40 },
+  { name: "Yaa Asantewaa", era: "Resistance · c. 1840–1921", img: null,
+    quote: "If you the men of Ashanti will not go forward then we the women will", palette: ["#2a1a00","#5a3a10","#8a5a20","#b88838","#e0b868"], seed: 41 },
+  { name: "Rosa Parks", era: "Activism · 1913–2005", img: "portraits/rosa-parks.jpg",
+    quote: "Each person must live their life as a model for others", palette: ["#2c1810","#5d4037","#8d6e63","#bcaaa4","#d7ccc8"], seed: 42 },
+  { name: "Simone Veil", era: "Justice · 1927–2017", img: "portraits/simone-veil.jpg",
+    quote: "We must always take sides neutrality helps the oppressor never the victim", palette: ["#1a1a3a","#2d2d5a","#4a4a8a","#8888bb","#bbbbdd"], seed: 43 },
+  { name: "Wangari Maathai", era: "Environment · 1940–2011", img: "portraits/wangari-maathai.jpg",
+    quote: "It is the little things citizens do that will make the difference", palette: ["#1a2a10","#2a5a20","#4a8a38","#78b858","#b0e090"], seed: 44 },
+  { name: "Rigoberta Menchú", era: "Rights · 1959–present", img: "portraits/rigoberta-menchu.jpg",
+    quote: "Peace is not something you wish for it is something you make something you do something you are", palette: ["#2a1a10","#5a3820","#8a6038","#c09058","#e8c898"], seed: 45 },
+  { name: "Malala Yousafzai", era: "Education · 1997–present", img: "portraits/malala-yousafzai.jpg",
+    quote: "One child one teacher one book one pen can change the world", palette: ["#1a3c34","#2d6a4f","#40916c","#74c69d","#b7e4c7"], seed: 46 },
+  { name: "Aung San Suu Kyi", era: "Resistance · 1945–present", img: "portraits/aung-san-suu-kyi.jpg",
+    quote: "The only real prison is fear and the only real freedom is freedom from fear", palette: ["#2a2a10","#5a5a28","#8a8a48","#b8b870","#e0e0a8"], seed: 47 },
+  { name: "Leila Khaled", era: "Resistance · 1944–present", img: "portraits/leila-khaled.jpg",
+    quote: "We are a nation of survivors not victims", palette: ["#1a1a1a","#3a3a3a","#6a6a6a","#a0a0a0","#d0d0d0"], seed: 48 },
+  // ── SCIENCE, TECHNOLOGY & INNOVATION (14) ──
+  { name: "Hypatia", era: "Philosophy · c. 360–415 AD", img: null,
+    quote: "Reserve your right to think for even to think wrongly is better than not to think at all", palette: ["#f0f0e8","#c8c4b8","#907860","#584838","#302018"], seed: 49 },
+  { name: "Ada Lovelace", era: "Science · 1815–1852", img: "portraits/ada-lovelace.png",
+    quote: "That brain of mine is something more than merely mortal as time will show", palette: ["#0a192f","#172a45","#303c55","#8892b0","#ccd6f6"], seed: 50 },
+  { name: "Florence Nightingale", era: "Nursing · 1820–1910", img: "portraits/florence-nightingale.jpg",
+    quote: "I attribute my success to this I never gave or took any excuse", palette: ["#e8e8e0","#c8c8c0","#888880","#5a7070","#3a5050"], seed: 51 },
+  { name: "Elizabeth Blackwell", era: "Medicine · 1821–1910", img: "portraits/elizabeth-blackwell.jpg",
+    quote: "It is not easy to be a pioneer but oh it is fascinating", palette: ["#2a2a30","#4a4a60","#7878a0","#a0a0c0","#d0d0e0"], seed: 52 },
+  { name: "Marie Curie", era: "Science · 1867–1934", img: "portraits/marie-curie.jpg",
+    quote: "Nothing in life is to be feared it is only to be understood", palette: ["#2a3a5c","#3d5a80","#98c1d9","#e0fbfc","#ee6c4d"], seed: 53 },
+  { name: "Maria Montessori", era: "Education · 1870–1952", img: "portraits/maria-montessori.jpg",
+    quote: "The greatest sign of success for a teacher is to be able to say the children are now working as if I did not exist", palette: ["#2a2a20","#5a5a40","#888868","#b8b898","#e0e0c8"], seed: 54 },
+  { name: "Grace Hopper", era: "Technology · 1906–1992", img: "portraits/grace-hopper.jpg",
+    quote: "The most dangerous phrase in the language is we have always done it this way", palette: ["#1a2030","#2a3860","#4a6090","#7898c0","#b0c8e0"], seed: 55 },
+  { name: "Rachel Carson", era: "Science · 1907–1964", img: "portraits/rachel-carson.jpg",
+    quote: "In every walk with nature one receives far more than he seeks", palette: ["#1a2a18","#2a5a28","#4a8a48","#78b870","#b0e0a8"], seed: 56 },
+  { name: "Jane Goodall", era: "Science · 1934–present", img: "portraits/jane-goodall.jpg",
+    quote: "What you do makes a difference and you have to decide what kind of difference you want to make", palette: ["#1a2a10","#3a5a20","#5a8a38","#88b858","#b8e088"], seed: 57 },
+  { name: "Virginia Apgar", era: "Medicine · 1909–1974", img: "portraits/virginia-apgar.jpg",
+    quote: "Nobody but nobody is going to stop breathing on me", palette: ["#2a2a30","#5a5a68","#8888a0","#b0b0c8","#d8d8e8"], seed: 58 },
+  { name: "Chien-Shiung Wu", era: "Physics · 1912–1997", img: "portraits/chien-shiung-wu.jpg",
+    quote: "There is only one thing worse than coming home from the lab to a sink full of dirty dishes and that is not going to the lab at all", palette: ["#1a2030","#2a3860","#4a6090","#7890c0","#b0c0e0"], seed: 59 },
+  { name: "Hedy Lamarr", era: "Innovation · 1914–2000", img: "portraits/hedy-lamarr.jpg",
+    quote: "Any girl can be glamorous all you have to do is stand still and look stupid but I invented something", palette: ["#2a1a20","#5a3040","#8a4860","#c07898","#e0a8c0"], seed: 60 },
+  { name: "Henrietta Lacks", era: "Science · 1920–1951", img: "portraits/henrietta-lacks.jpg",
+    quote: "Her cells changed medicine forever though the world forgot her name for decades", palette: ["#1a1020","#3a2040","#5a3868","#8868a0","#b8a0d0"], seed: 61 },
+  { name: "Rosalind Franklin", era: "Science · 1920–1958", img: "portraits/rosalind-franklin.jpg",
+    quote: "Science and everyday life cannot and should not be separated", palette: ["#1a2030","#2a4060","#4a6898","#80a0c8","#b8d0e8"], seed: 62 },
+  // ── ARTS, LITERATURE & THOUGHT (13) ──
+  { name: "Sappho", era: "Poetry · c. 630–570 BC", img: "portraits/sappho.jpg",
+    quote: "What cannot be said will be wept", palette: ["#2a1a30","#5a3a60","#8a5a90","#b888c0","#e0b8e0"], seed: 63 },
+  { name: "Hildegard of Bingen", era: "Thought · 1098–1179", img: "portraits/hildegard-of-bingen.jpg",
+    quote: "Dare to declare who you are it is not far from the shores of silence to the boundaries of speech", palette: ["#2a2018","#5a4838","#887060","#b8a088","#e8d0b8"], seed: 64 },
+  { name: "Sor Juana Inés de la Cruz", era: "Literature · 1648–1695", img: "portraits/sor-juana.jpg",
+    quote: "One can study and at the same time cook", palette: ["#2a1a10","#5a3a28","#8a5a40","#b88860","#e0b898"], seed: 65 },
+  { name: "Jane Austen", era: "Literature · 1775–1817", img: "portraits/jane-austen.jpg",
+    quote: "There is no charm equal to tenderness of heart", palette: ["#2a2a28","#5a5a50","#888878","#b8b8a8","#e8e8d8"], seed: 66 },
+  { name: "Virginia Woolf", era: "Literature · 1882–1941", img: "portraits/virginia-woolf.jpg",
+    quote: "You cannot find peace by avoiding life", palette: ["#1b3a4b","#3a5a6b","#6b9cac","#a3c4bc","#dce8d8"], seed: 67 },
+  { name: "Frida Kahlo", era: "Art · 1907–1954", img: "portraits/frida-kahlo.jpg",
+    quote: "I paint myself because I am so often alone and because I am the subject I know best", palette: ["#6b1d1d","#c0392b","#e74c3c","#f39c12","#27ae60"], seed: 68 },
+  { name: "Simone de Beauvoir", era: "Philosophy · 1908–1986", img: "portraits/simone-de-beauvoir.jpg",
+    quote: "One is not born but rather becomes a woman", palette: ["#1a1a2e","#16213e","#0f3460","#533483","#e94560"], seed: 69 },
+  { name: "Hannah Arendt", era: "Thought · 1906–1975", img: "portraits/hannah-arendt.jpg",
+    quote: "The sad truth is that most evil is done by people who never make up their minds to be good or evil", palette: ["#2a2a30","#4a4a58","#7070888","#a0a0b8","#d0d0e0"], seed: 70 },
+  { name: "Simone Weil", era: "Philosophy · 1909–1943", img: "portraits/simone-weil.jpg",
+    quote: "Attention is the rarest and purest form of generosity", palette: ["#2a2018","#5a4838","#887060","#b8a088","#e8d0b8"], seed: 71 },
+  { name: "Maya Angelou", era: "Literature · 1928–2014", img: "portraits/maya-angelou.jpg",
+    quote: "There is no greater agony than bearing an untold story inside you", palette: ["#5c2a2a","#8b4513","#d4a574","#f5deb3","#faf0e6"], seed: 72 },
+  { name: "Anne Frank", era: "Legacy · 1929–1945", img: "portraits/anne-frank.jpg",
+    quote: "No one has ever become poor by giving", palette: ["#2a2a20","#5a5a48","#888868","#b8b898","#e8e8d0"], seed: 73 },
+  { name: "Toni Morrison", era: "Literature · 1931–2019", img: "portraits/toni-morrison.jpg",
+    quote: "If there is a book that you want to read but it has not been written then you must write it", palette: ["#1a0a00","#3d1c02","#6b3a2a","#9c6644","#ddb892"], seed: 74 },
+  { name: "Agnès Varda", era: "Cinema · 1928–2019", img: "portraits/agnes-varda.jpg",
+    quote: "If we opened people up we would find landscapes", palette: ["#2a2030","#4a3858","#7a6088","#a890b8","#d0c0e0"], seed: 75 },
+  // ── ENTERTAINMENT & CULTURAL ICONS (5) ──
+  { name: "Katharine Hepburn", era: "Cinema · 1907–2003", img: "portraits/katharine-hepburn.jpg",
+    quote: "If you obey all the rules you miss all the fun", palette: ["#2a2a2a","#5a5a5a","#888888","#b8b8b8","#e8e8e8"], seed: 76 },
+  { name: "Marilyn Monroe", era: "Cultural Icon · 1926–1962", img: "portraits/marilyn-monroe.jpg",
+    quote: "Imperfection is beauty madness is genius and it is better to be absolutely ridiculous than absolutely boring", palette: ["#2a1020","#5a2848","#a04878","#d080a8","#f0b8d0"], seed: 77 },
+  { name: "Oprah Winfrey", era: "Media · 1954–present", img: "portraits/oprah-winfrey.jpg",
+    quote: "Turn your wounds into wisdom", palette: ["#3d1c02","#6b3a2a","#a0522d","#d4956a","#ffe4c4"], seed: 78 },
+  { name: "Madonna", era: "Music · 1958–present", img: "portraits/madonna.jpg",
+    quote: "I stand for freedom of expression doing what you believe in and going after your dreams", palette: ["#2a1030","#5a2060","#8a3898","#b868c0","#e0a0e0"], seed: 79 },
+  { name: "Taylor Swift", era: "Music · 1989–present", img: "portraits/taylor-swift.png",
+    quote: "No matter what happens in life be good to people being great is so overrated", palette: ["#2a2030","#4a3860","#7868a0","#a898c8","#d0c8e8"], seed: 80 },
+  // ── SPORT (4) ──
+  { name: "Billie Jean King", era: "Sport · 1943–present", img: "portraits/billie-jean-king.jpg",
+    quote: "Pressure is a privilege", palette: ["#1a2a1a","#2a5a2a","#4a8a4a","#78b878","#b0e0b0"], seed: 81 },
+  { name: "Nadia Comăneci", era: "Sport · 1961–present", img: "portraits/nadia-comaneci.jpg",
+    quote: "I do not run away from a challenge because I am afraid I run toward it", palette: ["#2a1a20","#5a3040","#8a4860","#c07898","#e0a8c8"], seed: 82 },
+  { name: "Kathrine Switzer", era: "Sport · 1947–present", img: "portraits/kathrine-switzer.jpg",
+    quote: "If you are losing faith in human nature go out and watch a marathon", palette: ["#1a2030","#2a4060","#4a6898","#80a0c8","#b8d0e8"], seed: 83 },
+  { name: "Serena Williams", era: "Sport · 1981–present", img: "portraits/serena-williams.jpg",
+    quote: "I really think a champion is defined not by their wins but by how they can recover when they fall", palette: ["#2a1a10","#5a3820","#8a5838","#c08858","#e8b888"], seed: 84 },
+  // ── BUSINESS, FASHION & MEDIA (9) ──
+  { name: "Veuve Clicquot", era: "Business · 1777–1866", img: "portraits/veuve-clicquot.jpg",
+    quote: "The world is in perpetual motion and we must invent the things of tomorrow", palette: ["#2a2010","#5a4828","#8a7040","#c0a060","#e8d098"], seed: 85 },
+  { name: "Geraldine Harmsworth", era: "Media · 1838–1925", img: "portraits/geraldine-harmsworth.jpg",
+    quote: "Behind the press barons stood a mother whose ambition shaped an empire of words", palette: ["#2a2a28","#5a5a50","#888878","#b8b8a8","#e0e0d8"], seed: 86 },
+  { name: "Nellie Bly", era: "Journalism · 1864–1922", img: "portraits/nellie-bly.jpg",
+    quote: "Energy rightly applied and directed will accomplish anything", palette: ["#2a2030","#4a3858","#7868a0","#a098c0","#c8c0e0"], seed: 87 },
+  { name: "Madam C.J. Walker", era: "Business · 1867–1919", img: "portraits/madam-cj-walker.jpg",
+    quote: "I got my start by giving myself a start", palette: ["#2a1a10","#5a3a20","#8a5a30","#c08848","#e8c088"], seed: 88 },
+  { name: "Coco Chanel", era: "Fashion · 1883–1971", img: "portraits/coco-chanel.jpg",
+    quote: "A girl should be two things who and what she wants", palette: ["#1a1a1a","#2d2d2d","#4a4a4a","#f5f5dc","#d4af37"], seed: 89 },
+  { name: "Estée Lauder", era: "Business · 1908–2004", img: "portraits/estee-lauder.jpg",
+    quote: "I never dreamed about success I worked for it", palette: ["#1a0a10","#3a1a2a","#6a3a4a","#c4856a","#f0d0b8"], seed: 90 },
+  { name: "Anna Wintour", era: "Fashion · 1949–present", img: "portraits/anna-wintour.jpg",
+    quote: "Create your own style let it be unique for yourself and yet identifiable for others", palette: ["#1a1a20","#3a3a48","#6a6a80","#a0a0b0","#d0d0d8"], seed: 91 },
+  { name: "Sheryl Sandberg", era: "Technology · 1969–present", img: "portraits/sheryl-sandberg.jpg",
+    quote: "Done is better than perfect", palette: ["#1a2030","#2a3860","#4a6890","#78a0c0","#b0d0e0"], seed: 92 },
+  { name: "Whitney Wolfe Herd", era: "Technology · 1989–present", img: "portraits/whitney-wolfe-herd.jpg",
+    quote: "Be the CEO your parents always wanted you to marry", palette: ["#2a2020","#5a3838","#8a5858","#c08888","#e0b8b8"], seed: 93 },
+  // ── COURAGE, SACRIFICE & ESPIONAGE (6) ──
+  { name: "Joan of Arc", era: "Courage · c. 1412–1431", img: "portraits/joan-of-arc.jpg",
+    quote: "I am not afraid I was born to do this", palette: ["#2d1b00","#5c4033","#8b7355","#c0c0c0","#e8e8e8"], seed: 94 },
+  { name: "Mother Teresa", era: "Service · 1910–1997", img: "portraits/mother-teresa.jpg",
+    quote: "If you judge people you have no time to love them", palette: ["#f0f0e8","#d0d0c0","#a0a090","#707068","#404038"], seed: 95 },
+  { name: "Amelia Earhart", era: "Adventure · 1897–1937", img: "portraits/amelia-earhart.jpg",
+    quote: "The most difficult thing is the decision to act the rest is merely tenacity", palette: ["#1b2838","#2a4a6b","#4a90b8","#87ceeb","#e0f0ff"], seed: 96 },
+  { name: "Virginia Hall", era: "Espionage · 1906–1982", img: "portraits/virginia-hall.jpg",
+    quote: "She was the most dangerous of all Allied spies and she did it on a prosthetic leg", palette: ["#1a2020","#2a4040","#4a6868","#789898","#b0c8c8"], seed: 97 },
+  { name: "Valentina Tereshkova", era: "Space · 1937–present", img: "portraits/valentina-tereshkova.jpg",
+    quote: "Once you have been in space you appreciate how small and fragile the Earth is", palette: ["#0a1030","#1a2860","#2a48a0","#5878d0","#90b0f0"], seed: 98 },
+  { name: "Mae Jemison", era: "Space · 1956–present", img: "portraits/mae-jemison.jpg",
+    quote: "Never limit yourself because of others limited imagination", palette: ["#1a1030","#2a2060","#4a38a0","#7868d0","#b0a0f0"], seed: 99 },
 ];
 
-const TOTAL_SQUARES = 64;
-const CYCLE_MS = 30000;
-let currentIndex = 0;
-let timerStart = 0;
-let animFrameId = null;
+// ═══════════════════════════════════════════════════
+// CANVAS SETUP
+// ═══════════════════════════════════════════════════
+const SIZE = 800;
+const canvas = document.getElementById('main');
+const ctx = canvas.getContext('2d');
+const offscreen = document.createElement('canvas');
+const offCtx = offscreen.getContext('2d');
 
-// Build board
-const board = document.getElementById("board");
-for (let i = 0; i < TOTAL_SQUARES; i++) {
-  const row = Math.floor(i / 8);
-  const col = i % 8;
-  const isLight = (row + col) % 2 === 0;
-  const sq = document.createElement("div");
-  sq.className = `square ${isLight ? "light" : "dark"}`;
-  sq.id = `sq-${i}`;
-  board.appendChild(sq);
+// ═══════════════════════════════════════════════════
+// IMAGE LOADING — local files with generated fallback
+// ═══════════════════════════════════════════════════
+const imageCache = new Map();
+
+function seededRandom(seed) {
+  let s = seed;
+  return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
 }
 
-function displayQuote(index) {
-  const quote = quotes[index];
-  const words = quote.text.split(/\s+/);
-  const attribution = document.getElementById("attribution");
-  const n = words.length;
+function generateFallbackPortrait(woman) {
+  const c = document.createElement('canvas');
+  c.width = SIZE; c.height = SIZE;
+  const g = c.getContext('2d');
+  const rand = seededRandom(woman.seed * 7919);
+  const p = woman.palette;
 
-  // Spread words evenly across all 64 squares, maintaining left-to-right, top-to-bottom order
-  // Calculate which squares get words using even distribution
-  const wordSquares = new Set();
-  if (n >= TOTAL_SQUARES) {
-    // More words than squares — fill every square
-    for (let i = 0; i < TOTAL_SQUARES; i++) wordSquares.add(i);
-  } else {
-    // Distribute evenly across the board
-    for (let w = 0; w < n; w++) {
-      const pos = Math.round(w * (TOTAL_SQUARES - 1) / (n - 1 || 1));
-      wordSquares.add(pos);
-    }
-    // Resolve any collisions by nudging to nearest free square
-    const sorted = [...wordSquares].sort((a, b) => a - b);
-    if (sorted.length < n) {
-      const all = new Set(sorted);
-      for (let w = 0; w < n && all.size < n; w++) {
-        const ideal = Math.round(w * (TOTAL_SQUARES - 1) / (n - 1 || 1));
-        let offset = 1;
-        while (all.has(ideal)) {
-          if (ideal + offset < TOTAL_SQUARES && !all.has(ideal + offset)) { all.add(ideal + offset); break; }
-          if (ideal - offset >= 0 && !all.has(ideal - offset)) { all.add(ideal - offset); break; }
-          offset++;
-        }
-      }
-      wordSquares.clear();
-      all.forEach(v => wordSquares.add(v));
-    }
+  g.fillStyle = p[0]; g.fillRect(0, 0, SIZE, SIZE);
+
+  const cx = SIZE * (0.35 + rand() * 0.3);
+  const cy = SIZE * (0.2 + rand() * 0.25);
+  const gr = g.createRadialGradient(cx, cy, 10, cx, cy, SIZE * 0.65);
+  gr.addColorStop(0, p[3] + 'dd');
+  gr.addColorStop(0.3, p[2] + '88');
+  gr.addColorStop(0.7, p[1] + '44');
+  gr.addColorStop(1, 'transparent');
+  g.fillStyle = gr; g.fillRect(0, 0, SIZE, SIZE);
+
+  for (let i = 0; i < 60; i++) {
+    g.save();
+    const x = rand() * SIZE, y = rand() * SIZE;
+    g.translate(x, y);
+    g.rotate((rand() - 0.5) * 0.8);
+    const alpha = (20 + rand() * 60) | 0;
+    g.fillStyle = p[(rand() * p.length) | 0] + alpha.toString(16).padStart(2, '0');
+    g.fillRect(-(30 + rand() * 180) / 2, -(20 + rand() * 120) / 2, 30 + rand() * 180, 20 + rand() * 120);
+    g.restore();
   }
 
-  // Map sorted positions to words in order
-  const positions = [...wordSquares].sort((a, b) => a - b);
-  const squareToWord = new Map();
-  for (let w = 0; w < Math.min(n, positions.length); w++) {
-    squareToWord.set(positions[w], words[w]);
+  const fg = g.createRadialGradient(cx, cy, 5, cx, cy, SIZE * 0.35);
+  fg.addColorStop(0, p[4] + '88');
+  fg.addColorStop(0.5, p[3] + '44');
+  fg.addColorStop(1, 'transparent');
+  g.fillStyle = fg; g.fillRect(0, 0, SIZE, SIZE);
+
+  for (let i = 0; i < 80; i++) {
+    const x = cx + (rand() - 0.5) * SIZE * 0.8;
+    const y = cy + (rand() - 0.5) * SIZE * 0.8;
+    const r = 5 + rand() * 30;
+    g.beginPath();
+    g.ellipse(x, y, r, r * (0.4 + rand()), rand() * Math.PI, 0, Math.PI * 2);
+    const a2 = (15 + rand() * 50) | 0;
+    g.fillStyle = p[(rand() * p.length) | 0] + a2.toString(16).padStart(2, '0');
+    g.fill();
   }
 
-  for (let i = 0; i < TOTAL_SQUARES; i++) {
-    const sq = document.getElementById(`sq-${i}`);
-    if (squareToWord.has(i)) {
-      sq.textContent = squareToWord.get(i);
-      sq.classList.add("has-word");
-    } else {
-      sq.textContent = "";
-      sq.classList.remove("has-word");
-    }
-    sq.classList.remove("fade-out");
-  }
-
-  attribution.textContent = quote.author ? `— ${quote.author}` : "";
-  attribution.classList.remove("fade-out");
+  const img = new Image();
+  img.src = c.toDataURL();
+  return img;
 }
 
-function fadeOut(callback) {
-  const squares = document.querySelectorAll(".square");
-  const attribution = document.getElementById("attribution");
-  squares.forEach(sq => sq.classList.add("fade-out"));
-  attribution.classList.add("fade-out");
-  setTimeout(callback, 850);
-}
+function loadImage(woman) {
+  return new Promise((resolve) => {
+    if (imageCache.has(woman.name)) { resolve(imageCache.get(woman.name)); return; }
 
-function nextQuote() {
-  fadeOut(() => {
-    currentIndex = (currentIndex + 1) % quotes.length;
-    displayQuote(currentIndex);
-    timerStart = performance.now();
+    if (!woman.img) {
+      const fb = generateFallbackPortrait(woman);
+      imageCache.set(woman.name, fb);
+      resolve(fb);
+      return;
+    }
+
+    const img = new Image();
+    img.onload = () => { imageCache.set(woman.name, img); resolve(img); };
+    img.onerror = () => {
+      console.warn(`Failed to load ${woman.img}, using generated portrait`);
+      const fb = generateFallbackPortrait(woman);
+      imageCache.set(woman.name, fb);
+      resolve(fb);
+    };
+    img.src = woman.img;
   });
 }
 
-// Timer bar animation
-function updateTimer(now) {
-  const elapsed = now - timerStart;
-  const pct = Math.min((elapsed / CYCLE_MS) * 100, 100);
-  document.getElementById("timerFill").style.width = pct + "%";
-
-  if (elapsed >= CYCLE_MS) {
-    nextQuote();
+// Preload ahead
+function preloadAhead(startIdx, count) {
+  for (let i = 0; i < count; i++) {
+    loadImage(women[(startIdx + i) % women.length]);
   }
-  animFrameId = requestAnimationFrame(updateTimer);
 }
 
-// Shuffle on load for variety
+// ═══════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════
+
+function drawPixelated(image, gridSize) {
+  if (!image) return;
+  const gs = Math.max(2, Math.round(gridSize));
+  offscreen.width = gs; offscreen.height = gs;
+
+  // Cover-crop to square
+  const iw = image.naturalWidth || image.width || gs;
+  const ih = image.naturalHeight || image.height || gs;
+  const scale = Math.max(gs / iw, gs / ih);
+  const sw = iw * scale, sh = ih * scale;
+  offCtx.drawImage(image, (gs - sw) / 2, (gs - sh) / 2, sw, sh);
+
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(offscreen, 0, 0, gs, gs, 0, 0, SIZE, SIZE);
+}
+
+function drawChessOverlay(alpha) {
+  if (alpha <= 0) return;
+  const sq = SIZE / 8;
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const isLight = (r + c) % 2 === 0;
+      ctx.fillStyle = isLight
+        ? `rgba(224,221,216,${alpha})`
+        : `rgba(100,96,90,${alpha})`;
+      ctx.fillRect(c * sq, r * sq, sq, sq);
+    }
+  }
+  if (alpha > 0.2) {
+    ctx.strokeStyle = `rgba(60,56,50,${alpha * 0.35})`;
+    ctx.lineWidth = 1.5;
+    for (let i = 1; i < 8; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * sq, 0); ctx.lineTo(i * sq, SIZE);
+      ctx.moveTo(0, i * sq); ctx.lineTo(SIZE, i * sq);
+      ctx.stroke();
+    }
+  }
+}
+
+function drawQuoteWords(text, alpha) {
+  if (alpha <= 0) return;
+  const words = text.split(/\s+/);
+  const n = words.length;
+  const sq = SIZE / 8;
+
+  const positions = [];
+  if (n >= 64) {
+    for (let i = 0; i < 64; i++) positions.push(i);
+  } else {
+    const used = new Set();
+    for (let w = 0; w < n; w++) {
+      let pos = Math.round(w * 63 / (n - 1 || 1));
+      while (used.has(pos) && pos < 64) pos++;
+      if (pos >= 64) { pos = 0; while (used.has(pos)) pos++; }
+      used.add(pos);
+      positions.push(pos);
+    }
+    positions.sort((a, b) => a - b);
+  }
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const fontSize = Math.max(10, sq * 0.18);
+  ctx.font = `italic 600 ${fontSize}px Georgia, serif`;
+
+  for (let w = 0; w < Math.min(n, positions.length); w++) {
+    const idx = positions[w];
+    const row = (idx / 8) | 0, col = idx % 8;
+    const isLight = (row + col) % 2 === 0;
+    ctx.fillStyle = isLight
+      ? `rgba(42,42,42,${alpha})`
+      : `rgba(240,236,230,${alpha})`;
+    ctx.fillText(words[w], col * sq + sq / 2, row * sq + sq / 2, sq - 6);
+  }
+}
+
+function drawQuoteOverlay(woman, alpha) {
+  if (alpha <= 0) return;
+  const gradH = SIZE * 0.32;
+  const grad = ctx.createLinearGradient(0, SIZE - gradH, 0, SIZE);
+  grad.addColorStop(0, `rgba(10,10,10,0)`);
+  grad.addColorStop(0.3, `rgba(10,10,10,${alpha * 0.75})`);
+  grad.addColorStop(1, `rgba(10,10,10,${alpha * 0.9})`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, SIZE - gradH, SIZE, gradH);
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  const qSize = SIZE * 0.026;
+  ctx.font = `italic 400 ${qSize}px Georgia, serif`;
+  ctx.fillStyle = `rgba(240,236,230,${alpha})`;
+
+  const maxW = SIZE * 0.85;
+  const words = woman.quote.split(/\s+/);
+  const lines = []; let line = '';
+  for (const w of words) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxW) { lines.push(line); line = w; }
+    else { line = test; }
+  }
+  if (line) lines.push(line);
+
+  const lineH = qSize * 1.6;
+  const startY = SIZE - 28 - lineH;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const prefix = i === 0 ? '\u201C' : '';
+    const suffix = i === lines.length - 1 ? '\u201D' : '';
+    ctx.fillText(`${prefix}${lines[i]}${suffix}`,
+      SIZE / 2, startY - (lines.length - 1 - i) * lineH);
+  }
+
+  const nSize = SIZE * 0.018;
+  ctx.font = `600 ${nSize}px Georgia, serif`;
+  ctx.fillStyle = `rgba(200,184,154,${alpha})`;
+  ctx.fillText(`\u2014 ${woman.name.toUpperCase()}`, SIZE / 2, SIZE - 12);
+}
+
+function drawVignette(alpha) {
+  if (alpha <= 0) return;
+  const vig = ctx.createRadialGradient(SIZE/2, SIZE/2, SIZE*0.28, SIZE/2, SIZE/2, SIZE*0.72);
+  vig.addColorStop(0, 'transparent');
+  vig.addColorStop(1, `rgba(10,10,10,${alpha})`);
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, SIZE, SIZE);
+}
+
+// ═══════════════════════════════════════════════════
+// ANIMATION ENGINE
+// ═══════════════════════════════════════════════════
+
+const T_PORTRAIT = 3500;   // Hold full portrait + quote overlay
+const T_PIXDOWN  = 3000;   // Pixelate down to 8×8
+const T_CHESS    = 5500;   // Hold chess grid with scattered quote words
+const T_PIXUP    = 3000;   // Mosaic up from 8×8 to next portrait
+const T_TOTAL = T_PORTRAIT + T_PIXDOWN + T_CHESS + T_PIXUP;
+
+function getPhase(elapsed) {
+  if (elapsed < T_PORTRAIT) return { phase: 'portrait', t: elapsed / T_PORTRAIT };
+  elapsed -= T_PORTRAIT;
+  if (elapsed < T_PIXDOWN) return { phase: 'pixdown', t: elapsed / T_PIXDOWN };
+  elapsed -= T_PIXDOWN;
+  if (elapsed < T_CHESS) return { phase: 'chess', t: elapsed / T_CHESS };
+  elapsed -= T_CHESS;
+  return { phase: 'pixup', t: Math.min(elapsed / T_PIXUP, 1) };
+}
+
+function easeInOutCubic(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+function easeOutQuad(t) { return 1 - (1-t)*(1-t); }
+function easeInQuad(t) { return t * t; }
+
+const GRID_MIN = 8;
+const GRID_MAX = 400;
+function gridLerp(t01) {
+  return GRID_MIN * Math.pow(GRID_MAX / GRID_MIN, t01);
+}
+
+let currentIdx = 0;
+let cycleStart = 0;
+
 function shuffle(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
 }
-shuffle(quotes);
+shuffle(women);
+preloadAhead(0, 6);
 
-// Start
-displayQuote(currentIndex);
-timerStart = performance.now();
-animFrameId = requestAnimationFrame(updateTimer);
+function render(timestamp) {
+  if (!cycleStart) cycleStart = timestamp;
+  const elapsed = timestamp - cycleStart;
+
+  if (elapsed >= T_TOTAL) {
+    currentIdx = (currentIdx + 1) % women.length;
+    cycleStart = timestamp;
+    preloadAhead(currentIdx, 6);
+    requestAnimationFrame(render);
+    return;
+  }
+
+  const { phase, t } = getPhase(elapsed);
+  const woman = women[currentIdx];
+  const nextWoman = women[(currentIdx + 1) % women.length];
+  const img = imageCache.get(woman.name);
+  const nextImg = imageCache.get(nextWoman.name);
+
+  ctx.clearRect(0, 0, SIZE, SIZE);
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, SIZE, SIZE);
+
+  const eraEl = document.getElementById('eraLabel');
+  const nameEl = document.getElementById('nameLabel');
+
+  // ── PHASE 1: Full portrait with quote ──
+  if (phase === 'portrait') {
+    if (img) drawPixelated(img, SIZE);
+    drawVignette(0.5);
+    eraEl.textContent = woman.era;
+    eraEl.classList.add('visible');
+    nameEl.textContent = `\u2014 ${woman.name}`;
+    nameEl.classList.add('visible');
+    const quoteAlpha = t > 0.4 ? easeOutQuad((t - 0.4) / 0.6) : 0;
+    drawQuoteOverlay(woman, quoteAlpha);
+  }
+
+  // ── PHASE 2: Pixelate DOWN to 8×8 ──
+  else if (phase === 'pixdown') {
+    const eased = easeInOutCubic(t);
+    const gs = gridLerp(1 - eased);
+    if (img) drawPixelated(img, gs);
+
+    const chessAlpha = eased > 0.5 ? easeOutQuad((eased - 0.5) / 0.5) * 0.5 : 0;
+    drawChessOverlay(chessAlpha);
+
+    const quoteAlpha = t < 0.25 ? 1 : 1 - easeInQuad((t - 0.25) / 0.75);
+    drawQuoteOverlay(woman, quoteAlpha);
+
+    eraEl.classList.add('visible');
+    nameEl.classList.add('visible');
+  }
+
+  // ── PHASE 3: Chess grid with quote words ──
+  else if (phase === 'chess') {
+    if (img) drawPixelated(img, 8);
+    drawChessOverlay(0.5);
+
+    const wordAlpha = t < 0.08 ? easeOutQuad(t / 0.08)
+                    : t > 0.88 ? 1 - easeInQuad((t - 0.88) / 0.12) : 1;
+    drawQuoteWords(woman.quote, wordAlpha);
+
+    // Subtle grid lines
+    const sq = SIZE / 8;
+    ctx.strokeStyle = 'rgba(50,46,40,0.2)';
+    ctx.lineWidth = 2;
+    for (let i = 1; i < 8; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * sq, 0); ctx.lineTo(i * sq, SIZE);
+      ctx.moveTo(0, i * sq); ctx.lineTo(SIZE, i * sq);
+      ctx.stroke();
+    }
+
+    eraEl.classList.add('visible');
+    nameEl.classList.add('visible');
+  }
+
+  // ── PHASE 4: Mosaic UP to next woman ──
+  else if (phase === 'pixup') {
+    const eased = easeInOutCubic(t);
+    const gs = gridLerp(eased);
+    const useNext = eased > 0.05;
+    const drawImg = useNext ? (nextImg || img) : img;
+    if (drawImg) drawPixelated(drawImg, gs);
+
+    const chessAlpha = eased < 0.35 ? 0.5 * (1 - easeOutQuad(eased / 0.35)) : 0;
+    drawChessOverlay(chessAlpha);
+
+    if (eased > 0.7) drawVignette(0.5 * easeOutQuad((eased - 0.7) / 0.3));
+
+    // Label crossfade
+    if (eased < 0.15) {
+      eraEl.classList.add('visible');
+      nameEl.classList.add('visible');
+    } else if (eased < 0.35) {
+      eraEl.classList.remove('visible');
+      nameEl.classList.remove('visible');
+    } else if (eased > 0.65) {
+      eraEl.textContent = nextWoman.era;
+      nameEl.textContent = `\u2014 ${nextWoman.name}`;
+      eraEl.classList.add('visible');
+      nameEl.classList.add('visible');
+    }
+  }
+
+  // Timer bar
+  document.getElementById('timerFill').style.width =
+    Math.min((elapsed / T_TOTAL) * 100, 100) + '%';
+
+  requestAnimationFrame(render);
+}
+
+// ═══════════════════════════════════════════════════
+// BOOT — wait for first image, then start
+// ═══════════════════════════════════════════════════
+loadImage(women[0]).then(() => {
+  requestAnimationFrame(render);
+});
 </script>
 </body>
 </html>
