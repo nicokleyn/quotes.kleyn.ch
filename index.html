@@ -510,7 +510,7 @@ function drawQuoteWords(text, alpha) {
 
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const fontSize = Math.max(10, sq * 0.18);
+  const fontSize = Math.max(14, sq * 0.28);
   ctx.font = `italic 600 ${fontSize}px Georgia, serif`;
 
   for (let w = 0; w < Math.min(n, positions.length); w++) {
@@ -526,7 +526,7 @@ function drawQuoteWords(text, alpha) {
 
 function drawQuoteOverlay(woman, alpha) {
   if (alpha <= 0) return;
-  const gradH = SIZE * 0.32;
+  const gradH = SIZE * 0.40;
   const grad = ctx.createLinearGradient(0, SIZE - gradH, 0, SIZE);
   grad.addColorStop(0, `rgba(10,10,10,0)`);
   grad.addColorStop(0.3, `rgba(10,10,10,${alpha * 0.75})`);
@@ -536,7 +536,7 @@ function drawQuoteOverlay(woman, alpha) {
 
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  const qSize = SIZE * 0.026;
+  const qSize = SIZE * 0.038;
   ctx.font = `italic 400 ${qSize}px Georgia, serif`;
   ctx.fillStyle = `rgba(240,236,230,${alpha})`;
 
@@ -551,7 +551,7 @@ function drawQuoteOverlay(woman, alpha) {
   if (line) lines.push(line);
 
   const lineH = qSize * 1.6;
-  const startY = SIZE - 28 - lineH;
+  const startY = SIZE - 36 - lineH;
   for (let i = lines.length - 1; i >= 0; i--) {
     const prefix = i === 0 ? '\u201C' : '';
     const suffix = i === lines.length - 1 ? '\u201D' : '';
@@ -559,10 +559,10 @@ function drawQuoteOverlay(woman, alpha) {
       SIZE / 2, startY - (lines.length - 1 - i) * lineH);
   }
 
-  const nSize = SIZE * 0.018;
+  const nSize = SIZE * 0.026;
   ctx.font = `600 ${nSize}px Georgia, serif`;
   ctx.fillStyle = `rgba(200,184,154,${alpha})`;
-  ctx.fillText(`\u2014 ${woman.name.toUpperCase()}`, SIZE / 2, SIZE - 12);
+  ctx.fillText(`\u2014 ${woman.name.toUpperCase()}`, SIZE / 2, SIZE - 16);
 }
 
 function drawVignette(alpha) {
